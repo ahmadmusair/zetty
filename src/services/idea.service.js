@@ -36,6 +36,36 @@ const idea = {
       .then(mapToIdeas);
   },
 
+  fetchByRepliedID: async function (id) {
+    return utils.firebase
+      .firestore()
+      .collection("ideas")
+      .where("repliedID", "==", id)
+      .get()
+      .then((snap) => snap.docs.map((idea) => ({ ...idea.data(), id: idea.id })))
+      .then(([idea]) => idea) // prettier-ignore
+  },
+
+  fetchByID: async function (id) {
+    return utils.firebase
+      .firestore()
+      .collection("ideas")
+      .doc(id)
+      .get()
+      .then((snap) => ({ ...snap.data(), id: snap.id }));
+  },
+
+  fetchByThreadIDs: async function (threadIDs) {
+    return utils.firebase
+      .firestore()
+      .collection("ideas")
+      .orderBy("createdTime", "desc")
+      .startAt(utils.dateFns.getUnixTime(new Date()))
+      .where("threadID", "array-contains-any", threadIDs)
+      .get()
+      .then(mapToIdeas);
+  },
+
   star: function (idea) {
     return utils.firebase
       .firestore()
@@ -53,13 +83,15 @@ const idea = {
   },
 
   update: function (idea, update) {
-    utils.firebase
-      .firestore()
-      .collection("ideas")
-      .doc(idea.id)
-      .update(update) // prettier-ignore
-
-    return { ...idea, update };
+    return new Promise((resolve, reject) => {
+      utils.firebase
+        .firestore()
+        .collection("ideas")
+        .doc(idea.id)
+        .update(update)
+        .then(() => resolve({ ...idea, update }))
+        .catch(reject);
+    });
   },
 
   createResponse: async function (idea, repliedIdea) {

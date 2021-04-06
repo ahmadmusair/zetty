@@ -1,12 +1,15 @@
 import React, { useReducer, useState } from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
-import HomePage from "./pages";
+import HomePage from "./pages/HomePage";
+import ThreadPage from "./pages/ThreadPage";
 
 import { StoreCtx, mainReducer } from "./store";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.min.js";
+import ErrorBoundary from "./components/ErrorBoundary";
+import ErrorPage from "./pages/ErrorPage/ErrorPage";
 
 function App() {
   const [store, dispatch] = useReducer(
@@ -18,11 +21,18 @@ function App() {
     <StoreCtx.Provider value={[store, dispatch]}>
       <Router>
         <Switch>
-          <Route path="/home">
-            <HomePage />
+          <Route exact path="/">
+            <ErrorBoundary>
+              <HomePage />
+            </ErrorBoundary>
           </Route>
-          <Route path="/">
-            <div>404 Not Found</div>
+          <Route path="/ideas/:ideaID">
+            <ErrorBoundary>
+              <ThreadPage />
+            </ErrorBoundary>
+          </Route>
+          <Route path="/error">
+            <ErrorPage />
           </Route>
         </Switch>
       </Router>

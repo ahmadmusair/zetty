@@ -3,7 +3,7 @@ const constants = {
   PRIMARY_COLOR: "#7749F8",
   TEXT_COLOR: "#2d2d2d",
   TEXT_TERTIARY_COLOR: "#bebebe",
-  PRIMARY_COLOR_50: "#fcfbfe",
+  PRIMARY_COLOR_50: "#eaeaea",
 };
 
 export default constants;

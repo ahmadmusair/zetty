@@ -1,17 +1,13 @@
 import React, { useState, memo } from "react";
-import {
-  Badge,
-  Button,
-  Card as NativeCard,
-  Container,
-  Row,
-} from "react-bootstrap";
+import { Badge, Button, Card as NCard } from "react-bootstrap";
+import { Link } from "react-router-dom";
 
 import constants from "../../constants";
 import services from "../../services";
 import { useStore } from "../../store";
 import { starIdea, unstarIdea } from "../../store/idea.actions";
 import utils from "../../utils";
+
 import IdeaModal from "../IdeaModal";
 
 function IdeaCard({ idea }) {
@@ -28,16 +24,18 @@ function IdeaCard({ idea }) {
     isVisible: false,
   });
 
-  function showUpdateModal() {
+  function showUpdateModal(e) {
+    e.stopPropagation();
     setModal({
       ...modal,
-      mode: "EDIT",
+      mode: "UPDATE",
       isVisible: true,
       initialValue: idea,
     });
   }
 
-  function showResponseModal() {
+  function showResponseModal(e) {
+    e.stopPropagation();
     setModal({
       ...modal,
       mode: "RESPONSE",
@@ -51,14 +49,16 @@ function IdeaCard({ idea }) {
   }
 
   function _starIdea(idea) {
-    return () => {
+    return (e) => {
+      e.stopPropagation();
       services.idea.star(idea);
       dispatch(starIdea(idea));
     };
   }
 
   function _unstarIdea(idea) {
-    return () => {
+    return (e) => {
+      e.stopPropagation();
       services.idea.unstar(idea);
       dispatch(unstarIdea(idea));
     };
@@ -75,29 +75,23 @@ function IdeaCard({ idea }) {
   }
 
   return (
-    <NativeCard
-      className="mt-4 p-0"
-      style={{ borderRadius: "16px", overflow: "hidden" }}
-    >
-      <NativeCard.Body
-        className="p-4 cursor-pointer"
-        onClick={() => alert("Clicked")}
-      >
-        <NativeCard.Title>{idea.title}</NativeCard.Title>
-        <NativeCard.Subtitle
-          style={{ fontSize: "0.75rem", color: constants.TEXT_TERTIARY_COLOR }}
-        >
-          {formattedDate}{" "}
-          {idea.repliedID && `- Response to: #${idea.repliedID}`}
-        </NativeCard.Subtitle>
-        <NativeCard.Text className="mt-4">{idea.description}</NativeCard.Text>
-      </NativeCard.Body>
-      <NativeCard.Footer className="d-flex flex-row justify-content-between ps-4 pr-4">
+    <NCard className="p-0" style={styles.card}>
+      <NCard.Body className="p-4 cursor-pointer">
+        <Link to={`/ideas/${idea.id}`} style={styles.link}>
+          <NCard.Title>{idea.title}</NCard.Title>
+          <NCard.Subtitle style={styles.subtitle}>
+            {formattedDate}{" "}
+            {idea.repliedID && `- Response to: #${idea.repliedID}`}
+          </NCard.Subtitle>
+          <NCard.Text className="mt-4">{idea.description}</NCard.Text>
+        </Link>
+      </NCard.Body>
+
+      <NCard.Footer className="d-flex flex-row justify-content-between ps-4 pr-4">
         <Button
           onClick={showResponseModal}
           variant="transparent"
-          className="p-0 d-flex align-row align-items-center"
-        >
+          className="p-0 d-flex align-row align-items-center">
           <i className="bi bi-chat-square-text fs-4" />
           <Badge variant="secondary" className="text-primary">
             {idea.repliesCount}
@@ -109,19 +103,29 @@ function IdeaCard({ idea }) {
         <Button
           onClick={idea.isStarred ? _unstarIdea(idea) : _starIdea(idea)}
           variant="transparent"
-          className="p-0"
-        >
+          className="p-0">
           <i className={getClassName(idea)} style={getColor(idea)} />
         </Button>
-      </NativeCard.Footer>
+      </NCard.Footer>
+
       <IdeaModal
         visible={modal.isVisible}
         initialValue={modal.initialValue}
         mode={modal.mode}
         hideModal={hideModal}
       />
-    </NativeCard>
+    </NCard>
   );
 }
+
+const styles = {
+  subtitle: { fontSize: "0.75rem", color: constants.TEXT_TERTIARY_COLOR },
+  card: { borderRadius: "16px", overflow: "hidden" },
+  link: {
+    textDecoration: "none",
+    padding: "0px",
+    color: constants.TEXT_COLOR,
+  },
+};
 
 export default memo(IdeaCard);

@@ -1,5 +1,6 @@
 import { memo, useState, useEffect } from "react";
 import { Button, FormControl, Modal } from "react-bootstrap";
+import { Redirect } from "react-router";
 import services from "../../services";
 
 import { useStore } from "../../store";
@@ -15,24 +16,26 @@ function CreateIdeaModal({
   const [_, dispatch] = useStore();
 
   const [repliedIdea, setRepliedIdea] = useState(undefined);
-  const [title, setTitle] = useState(""); // prettier-ignore
-  const [description, setDescription] = useState(""); // prettier-ignore
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [error, setError] = useState(undefined);
 
   useEffect(() => {
-    if (mode === "EDIT") {
+    if (mode === "UPDATE" && visible) {
       setTitle(initialValue.title);
       setDescription(initialValue.description);
-    }
-
-    if (mode === "RESPONSE") {
+    } else if (mode === "RESPONSE" && visible) {
       setRepliedIdea(initialValue);
+    } else {
+      setTitle("");
+      setDescription("");
     }
-  }, [mode]);
+  }, [mode, visible]);
 
   function handleSubmit() {
     if (mode === "CREATE") {
       _createIdea();
-    } else if (mode === "EDIT") {
+    } else if (mode === "UPDATE") {
       _updateIdea();
     } else {
       _createResponse();
@@ -57,8 +60,8 @@ function CreateIdeaModal({
 
   async function _updateIdea() {
     dispatch(loadingIdea(true));
-
-    services.idea.update(initialValue, { title, description });
+    console.log({ title, description, initialValue });
+    services.idea.update(initialValue, { title, description }).catch(setError);
 
     dispatch(updateIdea(initialValue, { title, description }));
     dispatch(loadingIdea(false));
@@ -87,7 +90,7 @@ function CreateIdeaModal({
   function getTitleFromMode(mode) {
     return mode === "CREATE"
       ? "Create idea"
-      : mode === "EDIT"
+      : mode === "UPDATE"
       ? "Update idea"
       : "Create response";
   }
@@ -97,7 +100,9 @@ function CreateIdeaModal({
     setDescription("");
   }
 
-  return (
+  return error ? (
+    <Redirect to="/error" />
+  ) : (
     <Modal show={visible} onHide={hideModal}>
       <Modal.Header>
         <Modal.Title>{getTitleFromMode(mode)}</Modal.Title>
@@ -123,8 +128,7 @@ function CreateIdeaModal({
           onClick={() => {
             hideModal();
             resetModal();
-          }}
-        >
+          }}>
           Close
         </Button>
         <Button variant="primary" onClick={handleSubmit}>
