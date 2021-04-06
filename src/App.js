@@ -1,24 +1,32 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useReducer, useState } from "react";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+
+import HomePage from "./pages";
+
+import { StoreCtx, mainReducer } from "./store";
+
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.min.js";
 
 function App() {
+  const [store, dispatch] = useReducer(
+    mainReducer,
+    mainReducer({ idea: undefined }, { type: undefined })
+  );
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <StoreCtx.Provider value={[store, dispatch]}>
+      <Router>
+        <Switch>
+          <Route path="/home">
+            <HomePage />
+          </Route>
+          <Route path="/">
+            <div>404 Not Found</div>
+          </Route>
+        </Switch>
+      </Router>
+    </StoreCtx.Provider>
   );
 }
 
