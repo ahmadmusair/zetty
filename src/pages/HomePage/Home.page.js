@@ -1,6 +1,7 @@
 import { memo, useEffect, useState } from "react";
 import { Container, Row } from "react-bootstrap";
-import { Link, Redirect } from "react-router-dom";
+import { Redirect } from "react-router-dom";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 import Navbar from "../../components/Navbar";
 
@@ -9,40 +10,101 @@ import { storeManyIdea } from "../../store/idea.actions";
 import { useStore } from "../../store";
 import utils from "../../utils";
 import IdeaCard from "../../components/IdeaCard/IdeaCard";
-import constants from "../../constants";
+import { roundToNearestMinutes } from "date-fns/esm";
+import Loading from "../../components/Loading";
 
 function HomePage() {
   const [store, dispatch] = useStore();
   const [error, setError] = useState(undefined);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
-    const fetchIdeas = async () => {
-      const fetchedIdeas = await services.idea
-        .fetch({
-          end: utils.dateFns.getUnixTime(new Date()),
-          limit: 10,
-        })
-        .catch(setError);
-      dispatch(storeManyIdea(fetchedIdeas));
-    };
-
     if (store.idea.data.length === 0) {
       fetchIdeas();
     }
   }, []);
 
+  const fetchIdeas = () => {
+    setIsLoading(true);
+    services.idea
+      .rawFetch({
+        end: utils.dateFns.getUnixTime(new Date()),
+        limit: 5,
+      })
+      .then(mapToIdeas)
+      .then(saveToGlobalStore(dispatch))
+      .catch(setError)
+      .finally(() => setIsLoading(false));
+  };
+
+  const fetchMore = () => {
+    if (!isLoading && hasMore) {
+      setIsLoading(true);
+
+      const lastIdea = store.idea.data[store.idea.data.length - 1];
+      services.idea
+        .rawFetch({
+          end: lastIdea.createdTime,
+          limit: 5,
+        })
+        .then((snap) => {
+          if (snap.empty) {
+            setHasMore(false);
+            return [];
+          } else {
+            return mapToIdeas(snap);
+          }
+        })
+        .then(saveToGlobalStore(dispatch))
+        .catch(setError)
+        .finally(() => setIsLoading(false));
+    }
+  };
+
   return error ? (
     <Redirect to="/error" />
   ) : (
     <Container>
-      <Row style={{ maxWidth: "500px", margin: "0px auto" }}>
+      <Row
+        style={{
+          maxWidth: "500px",
+          margin: "0px auto",
+          paddingBottom: "128px",
+        }}>
         <Navbar />
-        {store.idea.data.sort(byCreatedTime).map((idea) => (
-          <IdeaCard key={idea.id} idea={idea} />
-        ))}
+        <div style={{ height: "32px" }} />
+        <InfiniteScroll
+          dataLength={store.idea.data.length}
+          next={fetchMore}
+          hasMore={hasMore}
+          scrollThreshold="100px"
+          loader={<Loading />}
+          endMessage={
+            <p style={{ textAlign: "center" }}>
+              <b>Yay! You have seen it all</b>
+            </p>
+          }>
+          {store.idea.data.sort(byCreatedTime).map((idea) => (
+            <>
+              <IdeaCard key={idea.id} idea={idea} />
+              <div style={{ height: "16px" }} />
+            </>
+          ))}
+        </InfiniteScroll>
       </Row>
     </Container>
   );
+}
+
+function mapToIdeas(snap) {
+  return snap.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+}
+
+function saveToGlobalStore(dispatch) {
+  return function (ideas) {
+    dispatch(storeManyIdea(ideas));
+  };
 }
 
 function byCreatedTime(firstIdea, secondIdea) {

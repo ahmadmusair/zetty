@@ -6,6 +6,7 @@ export const actionType = {
   STAR: "STAR_IDEA",
   UNSTAR: "UNSTAR_IDEA",
   UPDATE: "UPDATE_IDEA",
+  UPDATE_MANY: "UPDATE_MANY",
 };
 
 export const storeIdea = (idea) => ({
@@ -38,8 +39,12 @@ export const unstarIdea = (idea) => ({
   idea,
 });
 
-export const updateIdea = (idea, update) => ({
+export const updateIdea = (updated) => ({
   type: actionType.UPDATE,
-  idea,
-  update,
+  updated,
+});
+
+export const updateManyIdea = (ideas) => ({
+  type: actionType.UPDATE_MANY,
+  ideas,
 });

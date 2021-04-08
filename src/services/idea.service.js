@@ -2,27 +2,25 @@ import services from ".";
 import utils from "../utils";
 
 const idea = {
-  create: async function (idea) {
+  create: async function (ideaDraft) {
     const ideaRef = utils.firebase.firestore().collection("ideas").doc();
-    const thread = await services.thread.create({ count: 1 });
     const timestamp = utils.dateFns.getUnixTime(new Date());
 
-    const ideaWithID = {
-      ...idea,
+    const idea = {
       id: ideaRef.id,
-      threadID: [thread.id],
+      title: ideaDraft.title,
+      decription: ideaDraft.description,
       repliedID: null,
-      userID: 1,
-      isFirstReply: true,
       repliesCount: 0,
+      userID: 1,
       isStarred: false,
       createdTime: timestamp,
       updatedTime: timestamp,
     };
 
-    ideaRef.set(ideaWithID);
+    ideaRef.set(idea);
 
-    return ideaWithID;
+    return idea;
   },
 
   fetch: async function ({ end, limit }) {
@@ -30,10 +28,20 @@ const idea = {
       .firestore()
       .collection("ideas")
       .orderBy("createdTime", "desc")
-      .startAt(end)
+      .startAfter(end)
       .limit(limit)
       .get()
       .then(mapToIdeas);
+  },
+
+  rawFetch: async function ({ end, limit }) {
+    return utils.firebase
+      .firestore()
+      .collection("ideas")
+      .orderBy("createdTime", "desc")
+      .startAfter(end)
+      .limit(limit)
+      .get();
   },
 
   fetchByRepliedID: async function (id) {
@@ -42,8 +50,7 @@ const idea = {
       .collection("ideas")
       .where("repliedID", "==", id)
       .get()
-      .then((snap) => snap.docs.map((idea) => ({ ...idea.data(), id: idea.id })))
-      .then(([idea]) => idea) // prettier-ignore
+      .then((snap) => snap.docs.map((idea) => ({ ...idea.data(), id: idea.id }))) // prettier-ignore
   },
 
   fetchByID: async function (id) {
@@ -52,7 +59,17 @@ const idea = {
       .collection("ideas")
       .doc(id)
       .get()
-      .then((snap) => ({ ...snap.data(), id: snap.id }));
+      .then((snap) => {
+        if (snap.exists) {
+          return { ...snap.data(), id: snap.id };
+        } else {
+          throw Error(`Idea with id: ${id}, doesn't exist!`);
+        }
+      });
+  },
+
+  getSnapshot: function (id) {
+    return utils.firebase.firestore().collection("ideas").doc(id);
   },
 
   fetchByThreadIDs: async function (threadIDs) {
@@ -94,51 +111,30 @@ const idea = {
     });
   },
 
-  createResponse: async function (idea, repliedIdea) {
+  createResponse: async function (ideaDraft, repliedIdea) {
+    const timestamp = utils.dateFns.getUnixTime(new Date());
     const ideaRef = utils.firebase.firestore().collection("ideas").doc();
     const repliedIdeaRef = utils.firebase.firestore().collection("ideas").doc(repliedIdea.id); // prettier-ignore
-    const thread = await services.thread.create({ count: 1 });
-    const timestamp = utils.dateFns.getUnixTime(new Date());
-    const isFirstReply = repliedIdea.repliesCount === 0;
+    const repliedIdeaUpdate = { repliesCount: repliedIdea.repliesCount + 1 };
+    const updatedRepliedIdea = { ...repliedIdea, ...repliedIdeaUpdate };
 
-    const ideaWithID = {
-      ...idea,
+    const idea = {
       id: ideaRef.id,
-      threadID: isFirstReply ? [...repliedIdea.threadID] : [thread.id],
+      title: ideaDraft.title,
+      decription: ideaDraft.description,
       repliedID: repliedIdea.id,
       userID: 1,
-      isFirstReply,
       repliesCount: 0,
       isStarred: false,
       createdTime: timestamp,
       updatedTime: timestamp,
     };
 
-    const repliedIdeaUpdate = {
-      repliesCount: repliedIdea.repliesCount + 1,
-      threadID: isFirstReply
-        ? [...repliedIdea.threadID]
-        : [...repliedIdea.threadID, thread.id],
-      updatedTime: timestamp,
-    };
-
+    ideaRef.set(idea);
     repliedIdeaRef.update(repliedIdeaUpdate);
+    console.log({ idea, updatedRepliedIdea });
 
-    const affectedThreadIDrefs = isFirstReply
-      ? [...repliedIdea.threadID]
-      : [...repliedIdea.threadID, thread.id];
-
-    affectedThreadIDrefs.forEach((threadID) =>
-      utils.firebase
-        .firestore()
-        .collection("threads")
-        .doc(threadID)
-        .update({ count: utils.firebaseUtil.firestore.FieldValue.increment(1) })
-    );
-
-    ideaRef.set(ideaWithID);
-
-    return [ideaWithID, { ...repliedIdea, ...repliedIdeaUpdate }];
+    return [idea, updatedRepliedIdea];
   },
 };
 

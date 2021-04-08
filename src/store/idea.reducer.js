@@ -50,7 +50,29 @@ const ideaReducer = (idea = initialState, action) => {
         ...idea,
         data: [
           ...idea.data.map((idea) =>
-            idea.id === action.idea.id ? { ...idea, ...action.update } : idea
+            idea.id === action.updated.id ? action.updated : idea
+          ),
+        ],
+      };
+
+    case actionType.UPDATE_MANY:
+      const updated = action.ideas.reduce(
+        (acc, idea) => {
+          return {
+            ids: [...acc.ids],
+            lookup: { ...acc.lookup, [idea.id]: idea },
+          };
+        },
+        { ids: [], lookup: {} }
+      );
+
+      return {
+        ...idea,
+        data: [
+          ...idea.data.map((storedIdea) =>
+            updated.ids.includes(storedIdea.id)
+              ? updated.lookup[storedIdea.id]
+              : storedIdea
           ),
         ],
       };

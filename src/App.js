@@ -21,7 +21,7 @@ function App() {
     <StoreCtx.Provider value={[store, dispatch]}>
       <Router>
         <Switch>
-          <Route exact path="/">
+          <Route exact path="/ideas">
             <ErrorBoundary>
               <HomePage />
             </ErrorBoundary>
@@ -32,6 +32,9 @@ function App() {
             </ErrorBoundary>
           </Route>
           <Route path="/error">
+            <ErrorPage />
+          </Route>
+          <Route path="/">
             <ErrorPage />
           </Route>
         </Switch>

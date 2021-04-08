@@ -1,169 +1,108 @@
-import { memo, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  Button,
   Container,
-  OverlayTrigger,
   Row,
-  Tooltip,
+  Navbar as NativeNavbar,
+  Button,
 } from "react-bootstrap";
-import { Redirect, useParams } from "react-router";
-
-import Navbar from "../../components/Navbar";
+import { Redirect, useHistory, useParams, withRouter } from "react-router";
 
 import services from "../../services";
-import { Link } from "react-router-dom";
-import constants from "../../constants";
+
+import Navbar from "../../components/Navbar";
 import IdeaCard from "../../components/IdeaCard/IdeaCard";
+import Reply from "../../components/Reply";
 
 import "./ThreadPage.css";
+import Loading from "../../components/Loading";
 
 function ThreadPage() {
-  const { ideaID } = useParams();
+  const params = useParams();
+  const history = useHistory();
 
-  const [ideas, setIdeas] = useState([]);
-  const [focusedIdea, setFocusedIdea] = useState(undefined);
-  const [renderedIdeas, setRenderedIdeas] = useState([]);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    (async () => {
-      const fetchedFocusedIdea = await services.idea
-        .fetchByID(ideaID)
-        .catch(setError);
-
-      setFocusedIdea(fetchedFocusedIdea);
-      setRenderedIdeas([fetchedFocusedIdea]);
-    })();
-  }, []);
+  const [idea, setIdea] = useState(undefined);
+  const [replies, setReplies] = useState([]);
+  const [isLoadingIdea, setIsLoadingIdea] = useState(true);
+  const [isError, setIsError] = useState(undefined);
 
   useEffect(() => {
-    if (focusedIdea) {
-      (async () => {
-        const fetchedIdeas = await services.idea
-          .fetchByThreadIDs(focusedIdea.threadID)
-          .catch(setError);
+    fetchIdeaByID(params.ideaID);
+  }, [params.ideaID]);
 
-        setIdeas(fetchedIdeas);
-      })();
+  const fetchIdeaByID = (ideaID) => {
+    services.idea
+      .fetchByID(ideaID)
+      .then(setIdea)
+      .catch(setIsError)
+      .finally(() => setIsLoadingIdea(false));
+  };
+
+  useEffect(() => {
+    if (idea) {
+      fetchReplies(params.ideaID);
     }
-  }, [focusedIdea]);
+  }, [idea, params.ideaID]);
 
-  function loadPrevious() {
-    const [firstIdea] = renderedIdeas;
-    const previousIdea = ideas.find((data) => data.id === firstIdea.repliedID);
-    setRenderedIdeas([previousIdea, ...renderedIdeas]);
+  const fetchReplies = (ideaID) => {
+    services.idea
+      .fetchByRepliedID(ideaID)
+      .then(setReplies)
+      .catch(setIsError); // prettier-ignore
+  };
+
+  if (isError) {
+    return <Redirect to="/error" error={JSON.stringify(isError)} />;
   }
 
-  function loadNext() {
-    const lastIdea = renderedIdeas[renderedIdeas.length - 1];
-    const nextIdea = ideas.find(({ repliedID, isFirstReply }) => repliedID === lastIdea.id && isFirstReply); // prettier-ignore
-    setRenderedIdeas([...renderedIdeas, nextIdea]);
-  }
-
-  function isFirst(index) {
-    return index === 0;
-  }
-
-  function isLast(index, array) {
-    return index === array.length - 1;
-  }
-
-  function hasRepliedIdea(idea) {
-    return !!idea.repliedID;
-  }
-
-  function hasReply(idea) {
-    return idea.repliesCount > 0;
-  }
-
-  if (error) {
-    return <Redirect to="/error" />;
-  }
-
-  return (
+  return isLoadingIdea ? (
+    <Loading />
+  ) : (
     <Container>
       <Row style={{ maxWidth: "500px", margin: "0px auto" }}>
-        <Navbar />
-        {renderedIdeas.map((idea, i, ideas) => (
-          <div key={idea.id} style={{ padding: "0px" }}>
-            <PrevButton
-              onClick={loadPrevious}
-              show={hasRepliedIdea(idea) && isFirst(i)}
-            />
-            <Link
-              to={idea.id === ideaID ? "" : `/ideas/${idea.id}`}
-              style={styles.link}>
-              <IdeaCard idea={idea} />
-            </Link>
-            <NextButton
-              onClick={loadNext}
-              show={hasReply(idea) && isLast(i, ideas)}
-              showConnector={!isLast(i, ideas)}
-            />
-          </div>
-        ))}
+        <Navbar
+          left={() => (
+            <NativeNavbar.Brand className="ms-2">
+              <BackButton onClick={history.goBack} />
+            </NativeNavbar.Brand>
+          )}
+        />
+        <div style={{ height: "32px" }} />
+        {idea && <IdeaCard key={idea.id} idea={idea} />}
+        <Replies replies={replies} />
+        <div style={{ height: "128px" }} />
       </Row>
     </Container>
   );
 }
 
-function PrevButton({ onClick, show }) {
+function BackButton(props) {
   return (
-    show && (
-      <div className="d-flex flex-column align-items-center">
-        <OverlayTrigger
-          placement="top"
-          overlay={<Tooltip>Load previous</Tooltip>}>
-          <i
-            className="bi bi-arrow-up-circle-fill fs-3 btn--rounded"
-            style={styles.roundedButton}
-            onClick={onClick}
-          />
-        </OverlayTrigger>
-        <div style={styles.line} className="btn--rounded" />
-      </div>
-    )
+    <div className="d-flex align-row align-items-center">
+      <Button
+        onClick={props.onClick}
+        variant="transparent"
+        className="p-0 d-flex align-row align-items-center justify-content-center">
+        <i className="bi bi-arrow-left-circle-fill fs-4 btn--rounded btn--black" />
+      </Button>
+      <h1 className="fs-3 mb-0 ms-1">Thread</h1>
+    </div>
   );
 }
 
-function NextButton({ onClick, show, showConnector }) {
-  return show ? (
-    <div className="d-flex flex-column align-items-center">
-      <div style={styles.line} className="btn--rounded" />
-      <OverlayTrigger placement="top" overlay={<Tooltip>Load next</Tooltip>}>
-        <i
-          className="bi bi-arrow-down-circle-fill fs-3 btn--rounded"
-          style={styles.roundedButton}
-          onClick={onClick}
-        />
-      </OverlayTrigger>
-    </div>
-  ) : showConnector ? (
-    <div className="d-flex flex-column align-items-center">
-      <div style={styles.line} className="btn--rounded" />
-    </div>
-  ) : null;
+function Replies(props) {
+  return props.replies
+    .sort(ascendingByCreatedTime)
+    .map((reply, i, replies) => (
+      <Reply key={reply.id} idea={reply} isLast={isLast(i, replies)} />
+    ));
 }
 
-const styles = {
-  link: {
-    textDecoration: "none",
-    padding: "0px",
-    color: constants.TEXT_COLOR,
-  },
-  line: {
-    width: "4px",
-    height: "16px",
-    backgroundColor: constants.TEXT_TERTIARY_COLOR,
-  },
-  roundedButton: {
-    height: "28px",
-    width: "28px",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    cursor: "pointer",
-  },
-};
+function isLast(index, array) {
+  return index === array.length - 1;
+}
 
-export default memo(ThreadPage);
+function ascendingByCreatedTime(a, b) {
+  return a.createdTime - b.createdTime;
+}
+
+export default ThreadPage;

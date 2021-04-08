@@ -4,43 +4,41 @@ import { Redirect } from "react-router";
 import services from "../../services";
 
 import { useStore } from "../../store";
-import { storeIdea, loadingIdea, updateIdea } from "../../store/idea.actions";
-import utils from "../../utils";
+import {
+  storeIdea,
+  loadingIdea,
+  updateIdea,
+  updateManyIdea,
+} from "../../store/idea.actions";
 
-function CreateIdeaModal({
-  visible,
-  hideModal,
-  initialValue,
-  mode = "CREATE",
-}) {
+function IdeaModal(props) {
   const [_, dispatch] = useStore();
-
   const [repliedIdea, setRepliedIdea] = useState(undefined);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState(undefined);
 
   useEffect(() => {
-    if (mode === "UPDATE" && visible) {
-      setTitle(initialValue.title);
-      setDescription(initialValue.description);
-    } else if (mode === "RESPONSE" && visible) {
-      setRepliedIdea(initialValue);
+    if (props.mode === "UPDATE" && props.isVisible) {
+      setTitle(props.idea.title);
+      setDescription(props.idea.description);
+    } else if (props.mode === "RESPONSE" && props.isVisible) {
+      setRepliedIdea(props.idea);
     } else {
       setTitle("");
       setDescription("");
     }
-  }, [mode, visible]);
+  }, [props.mode, props.isVisible]);
 
   function handleSubmit() {
-    if (mode === "CREATE") {
+    if (props.mode === "CREATE") {
       _createIdea();
-    } else if (mode === "UPDATE") {
+    } else if (props.mode === "UPDATE") {
       _updateIdea();
     } else {
       _createResponse();
     }
-    hideModal();
+    props.hideModal();
   }
 
   async function _createIdea() {
@@ -60,10 +58,10 @@ function CreateIdeaModal({
 
   async function _updateIdea() {
     dispatch(loadingIdea(true));
-    console.log({ title, description, initialValue });
-    services.idea.update(initialValue, { title, description }).catch(setError);
 
-    dispatch(updateIdea(initialValue, { title, description }));
+    services.idea.update(props.idea, { title, description }).catch(setError);
+
+    dispatch(updateIdea(props.idea, { title, description }));
     dispatch(loadingIdea(false));
   }
 
@@ -77,13 +75,13 @@ function CreateIdeaModal({
       description,
     };
 
-    const [newIdea, updatedRepliedIdea] = await services.idea.createResponse(
+    const [newIdea, updatedIdea] = await services.idea.createResponse(
       ideaDraft,
       repliedIdea
     );
 
     dispatch(storeIdea(newIdea));
-    dispatch(updateIdea(repliedIdea, updatedRepliedIdea));
+    dispatch(updateIdea(updatedIdea));
     dispatch(loadingIdea(false));
   }
 
@@ -103,9 +101,9 @@ function CreateIdeaModal({
   return error ? (
     <Redirect to="/error" />
   ) : (
-    <Modal show={visible} onHide={hideModal}>
+    <Modal show={props.isVisible} onHide={props.hideModal}>
       <Modal.Header>
-        <Modal.Title>{getTitleFromMode(mode)}</Modal.Title>
+        <Modal.Title>{getTitleFromMode(props.mode)}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <FormControl
@@ -126,17 +124,17 @@ function CreateIdeaModal({
         <Button
           variant="secondary"
           onClick={() => {
-            hideModal();
+            props.hideModal();
             resetModal();
           }}>
           Close
         </Button>
         <Button variant="primary" onClick={handleSubmit}>
-          submit
+          Submit
         </Button>
       </Modal.Footer>
     </Modal>
   );
 }
 
-export default memo(CreateIdeaModal);
+export default memo(IdeaModal);
