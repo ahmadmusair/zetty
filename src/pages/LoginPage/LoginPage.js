@@ -24,7 +24,7 @@ function LoginPage() {
         </Form.Group>
 
         <Button className="w-100 mt-2 mb-4" variant="primary" type="submit">
-          Login
+          Log In
         </Button>
       </Form>
       <p className="text-sm-center mt-4">

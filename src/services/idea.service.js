@@ -132,7 +132,6 @@ const idea = {
 
     ideaRef.set(idea);
     repliedIdeaRef.update(repliedIdeaUpdate);
-    console.log({ idea, updatedRepliedIdea });
 
     return [idea, updatedRepliedIdea];
   },

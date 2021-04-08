@@ -1,9 +1,36 @@
-import { Container, Form, Button, Image } from "react-bootstrap";
+import { useState } from "react";
+import { Container, Form, Button, Image, Toast } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import services from "../../services";
 
 function SignUpPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [status, setStatus] = useState(null);
+
+  function signUp() {
+    services.user
+      .signup({ email, password })
+      .then(() => setStatus("Sign up success!, you can login now!"))
+      .catch((err) => setStatus(err.message));
+  }
+
   return (
     <Container style={styles.container}>
+      <Toast
+        className="mt-4 d-flex position-absolute bg-warning text-light"
+        style={{ width: "276px", top: "16px" }}
+        show={status}
+        onClose={() => setStatus(null)}>
+        <Toast.Body>{status}</Toast.Body>
+        <button
+          type="button"
+          class="btn-close me-2 m-auto text-light"
+          data-bs-dismiss="toast"
+          aria-label="Close"
+          onClick={() => setStatus(null)}
+        />
+      </Toast>
       <Image
         className="mb-2"
         rounded
@@ -15,16 +42,32 @@ function SignUpPage() {
       <Form>
         <Form.Group className="mb-3 mt-3" controlId="formBasicEmail mb-4">
           <Form.Label>Email address</Form.Label>
-          <Form.Control type="email" placeholder="Enter email" />
+          <Form.Control
+            value={email}
+            type="email"
+            placeholder="Enter email"
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </Form.Group>
 
         <Form.Group className="mb-4" controlId="formBasicPassword">
           <Form.Label>Password</Form.Label>
-          <Form.Control type="password" placeholder="Password" />
+          <Form.Control
+            value={password}
+            type="password"
+            placeholder="Password"
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </Form.Group>
 
-        <Button className="w-100 mt-2 mb-4" variant="primary" type="submit">
-          Login
+        <Button
+          className="w-100 mt-2 mb-4"
+          variant="primary"
+          onClick={(e) => {
+            e.preventDefault();
+            signUp();
+          }}>
+          Sign Up
         </Button>
       </Form>
       <p className="text-sm-center mt-4">
