@@ -1,11 +1,18 @@
 import { useState, memo } from "react";
-import { Navbar as NativeNavbar, Button, Image } from "react-bootstrap";
+import {
+  Navbar as NativeNavbar,
+  Button,
+  Image,
+  Dropdown,
+  DropdownButton,
+} from "react-bootstrap";
 import { useLocation } from "react-router";
 import constants from "../../constants";
+import utils from "../../utils";
 import IdeaModal from "../IdeaModal";
 
 function Navbar(props) {
-  const location = useLocation();
+  const user = utils.firebase.auth().currentUser;
 
   const [createModal, setCreateModal] = useState({
     isVisible: false,
@@ -15,6 +22,10 @@ function Navbar(props) {
   const showModal = () => setCreateModal({ ...createModal, isVisible: true });
 
   const hideModal = () => setCreateModal({ ...createModal, isVisible: false });
+
+  function logOut() {
+    utils.firebase.auth().signOut();
+  }
 
   return (
     <NativeNavbar
@@ -27,12 +38,14 @@ function Navbar(props) {
           <Image rounded src="/icons/zetty-logo.svg" />
         </NativeNavbar.Brand>
       )}
-      <Button variant="transparent" onClick={showModal}>
-        <i
-          className="bi fs-3 bi-lightbulb-fill"
-          style={{ color: constants.PRIMARY_COLOR }}
-        />
-      </Button>
+      <DropdownButton
+        variant="transparent"
+        style={{ display: "flex", justifyContent: "flex-end" }}
+        title={user.email}
+        id="dropdown-menu-align-right">
+        <Dropdown.Item onClick={showModal}>Create New Idea</Dropdown.Item>
+        <Dropdown.Item onClick={logOut}>Log out</Dropdown.Item>
+      </DropdownButton>
       <IdeaModal
         isVisible={createModal.isVisible}
         hideModal={hideModal}

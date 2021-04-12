@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { Container, Row } from "react-bootstrap";
 import { Redirect } from "react-router-dom";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -86,10 +86,10 @@ function HomePage() {
             </p>
           }>
           {store.idea.data.sort(byCreatedTime).map((idea) => (
-            <>
+            <React.Fragment key={idea.id}>
               <IdeaCard key={idea.id} idea={idea} />
               <div style={{ height: "16px" }} />
-            </>
+            </React.Fragment>
           ))}
         </InfiniteScroll>
       </Row>

@@ -8,47 +8,44 @@ import {
 import { Redirect, useHistory, useParams, withRouter } from "react-router";
 
 import services from "../../services";
+import { useStore } from "../../store";
 
 import Navbar from "../../components/Navbar";
 import IdeaCard from "../../components/IdeaCard/IdeaCard";
 import Reply from "../../components/Reply";
+import Loading from "../../components/Loading";
 
 import "./ThreadPage.css";
-import Loading from "../../components/Loading";
+import utils from "../../utils";
 
 function ThreadPage() {
   const params = useParams();
   const history = useHistory();
+  const [store, _dispatch] = useStore();
 
   const [idea, setIdea] = useState(undefined);
-  const [replies, setReplies] = useState([]);
-  const [isLoadingIdea, setIsLoadingIdea] = useState(true);
-  const [isError, setIsError] = useState(undefined);
-
   useEffect(() => {
-    fetchIdeaByID(params.ideaID);
-  }, [params.ideaID]);
-
-  const fetchIdeaByID = (ideaID) => {
     services.idea
-      .fetchByID(ideaID)
+      .fetchByID(params.ideaID)
       .then(setIdea)
       .catch(setIsError)
       .finally(() => setIsLoadingIdea(false));
-  };
+  }, [params.ideaID]);
 
+  const [replies, setReplies] = useState([]);
   useEffect(() => {
-    if (idea) {
-      fetchReplies(params.ideaID);
+    if (!!idea) {
+      console.log("Fetching data from fireabase", idea);
+      services.idea
+        .fetchByRepliedID(idea.id)
+        .then(utils.log)
+        .then(setReplies)
+        .catch(setIsError);
     }
-  }, [idea, params.ideaID]);
+  }, [idea]);
 
-  const fetchReplies = (ideaID) => {
-    services.idea
-      .fetchByRepliedID(ideaID)
-      .then(setReplies)
-      .catch(setIsError); // prettier-ignore
-  };
+  const [isLoadingIdea, setIsLoadingIdea] = useState(true);
+  const [isError, setIsError] = useState(undefined);
 
   if (isError) {
     return <Redirect to="/error" error={JSON.stringify(isError)} />;

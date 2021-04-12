@@ -10,6 +10,7 @@ import {
   updateIdea,
   updateManyIdea,
 } from "../../store/idea.actions";
+import utils from "../../utils";
 
 function IdeaModal(props) {
   const [_, dispatch] = useStore();
@@ -59,7 +60,15 @@ function IdeaModal(props) {
   async function _updateIdea() {
     dispatch(loadingIdea(true));
 
-    services.idea.update(props.idea, { title, description }).catch(setError);
+    services.idea
+      .update(props.idea, {
+        title: title || "",
+        description: description || "",
+      })
+      .catch((err) => {
+        utils.log(err);
+        setError(err);
+      });
 
     dispatch(updateIdea(props.idea, { title, description }));
     dispatch(loadingIdea(false));

@@ -1,5 +1,10 @@
-import React, { useReducer, useState } from "react";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import React, { useReducer } from "react";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Redirect,
+} from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
 import ThreadPage from "./pages/ThreadPage";
@@ -12,6 +17,9 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import ErrorPage from "./pages/ErrorPage/ErrorPage";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage/SignUpPage";
+import Protected from "./components/Protected/Protected";
+import { Helmet } from "react-helmet";
+import UnverifiedPage from "./pages/UnverifiedPage";
 
 function App() {
   const [store, dispatch] = useReducer(
@@ -21,6 +29,9 @@ function App() {
 
   return (
     <StoreCtx.Provider value={[store, dispatch]}>
+      <Helmet>
+        <title>Zetty: Your Smart Note-Taking App</title>
+      </Helmet>
       <Router>
         <Switch>
           <Route path="/login">
@@ -30,20 +41,20 @@ function App() {
             <SignUpPage />
           </Route>
           <Route exact path="/ideas">
-            <ErrorBoundary>
+            <Protected notAuthenticatedPath="/login">
               <HomePage />
-            </ErrorBoundary>
+            </Protected>
           </Route>
           <Route path="/ideas/:ideaID">
-            <ErrorBoundary>
+            <Protected notAuthenticatedPath="/login">
               <ThreadPage />
-            </ErrorBoundary>
+            </Protected>
           </Route>
           <Route path="/error">
             <ErrorPage />
           </Route>
           <Route path="/">
-            <ErrorPage />
+            <Redirect to="/ideas" />
           </Route>
         </Switch>
       </Router>

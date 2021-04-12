@@ -6,6 +6,10 @@ const user = {
       .auth()
       .createUserWithEmailAndPassword(email, password);
   },
+
+  login: function ({ email, password }) {
+    return utils.firebase.auth().signInWithEmailAndPassword(email, password);
+  },
 };
 
 export default user;

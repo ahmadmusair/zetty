@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useReducer } from "react";
 import { Badge, Button, Card as NCard } from "react-bootstrap";
 import { Link, Redirect, withRouter } from "react-router-dom";
 
@@ -74,28 +74,14 @@ function IdeaCard({ idea: initialIdea }) {
     setModal({ ...modal, idea: undefined, isVisible: false });
   }
 
-  function toggleStarred(idea) {
+  function toggleStar() {
     if (idea.isStarred) {
-      _unstarIdea(idea);
-    } else {
-      _starIdea(idea);
-    }
-  }
-
-  function _starIdea(idea) {
-    return (e) => {
-      e.stopPropagation();
-      services.idea.star(idea);
-      dispatch(starIdea(idea));
-    };
-  }
-
-  function _unstarIdea(idea) {
-    return (e) => {
-      e.stopPropagation();
-      services.idea.unstar(idea);
       dispatch(unstarIdea(idea));
-    };
+      services.idea.unstar(idea);
+    } else {
+      dispatch(starIdea(idea));
+      services.idea.star(idea);
+    }
   }
 
   return error ? (
@@ -118,7 +104,6 @@ function IdeaCard({ idea: initialIdea }) {
       <NCard.Footer className="d-flex flex-row justify-content-between ps-4 pr-4">
         <ReplyButton onClick={showResponseModal} count={idea.repliesCount} />
         <EditButton onClick={showUpdateModal} />
-        <StarButton onClick={toggleStarred} isStarred={idea.isStarred} />
       </NCard.Footer>
 
       <IdeaModal {...modal} hideModal={hideModal} />
@@ -131,8 +116,11 @@ function ReplyButton(props) {
     <Button
       onClick={props.onClick}
       variant="transparent"
-      className="p-0 d-flex align-row align-items-center">
-      <i className="bi bi-chat-square-text fs-4" />
+      className="p-0 d-flex align-row align-items-center"
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title="Create response">
+      <i className="bi bi-chat-right-fill fs-4 btn--rounded btn--black" />
       <Badge variant="secondary" className="text-primary">
         {props.count}
       </Badge>
@@ -142,8 +130,14 @@ function ReplyButton(props) {
 
 function EditButton(props) {
   return (
-    <Button onClick={props.onClick} variant="transparent" className="p-0">
-      <i className="bi bi-pen fs-4" />
+    <Button
+      onClick={props.onClick}
+      variant="transparent"
+      className="p-0"
+      data-bs-toggle="tooltip"
+      data-bs-placement="top"
+      title="Edit idea">
+      <i className="bi bi-pen-fill btn--rounded btn--black fs-4" />
     </Button>
   );
 }

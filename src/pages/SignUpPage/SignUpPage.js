@@ -1,36 +1,74 @@
-import { useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { Container, Form, Button, Image, Toast } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
+
 import services from "../../services";
+import utils from "../../utils";
+
+import Portal from "../../components/Portal";
+import Loading from "../../components/Loading";
 
 function SignUpPage() {
+  const history = useHistory();
+
+  const [user, setUser] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordIsVisible, togglePasswordVisibility] = useReducer(
+    (v) => !v,
+    false
+  );
   const [status, setStatus] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   function signUp() {
+    setIsLoading(true);
     services.user
       .signup({ email, password })
-      .then(() => setStatus("Sign up success!, you can login now!"))
-      .catch((err) => setStatus(err.message));
+      .then(() =>
+        setStatus(
+          `Successfull!, please click verification link we have just sent to ${email}`
+        )
+      )
+      .catch((err) => setStatus(err.message))
+      .finally(() => setIsLoading(false));
   }
 
-  return (
+  useEffect(() => {
+    if (user && user.emailVerified) {
+      history.push("/ideas");
+    } else {
+      setIsLoading(true);
+      utils.firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+          setUser(user);
+        }
+
+        setIsLoading(false);
+      });
+    }
+  }, [user]);
+
+  return isLoading ? (
+    <Loading />
+  ) : (
     <Container style={styles.container}>
-      <Toast
-        className="mt-4 d-flex position-absolute bg-warning text-light"
-        style={{ width: "276px", top: "16px" }}
-        show={status}
-        onClose={() => setStatus(null)}>
-        <Toast.Body>{status}</Toast.Body>
-        <button
-          type="button"
-          class="btn-close me-2 m-auto text-light"
-          data-bs-dismiss="toast"
-          aria-label="Close"
-          onClick={() => setStatus(null)}
-        />
-      </Toast>
+      <Portal>
+        <Toast
+          className="mt-4 d-flex position-absolute bg-warning text-light start-50 translate-middle"
+          style={{ width: "276px", top: "16px" }}
+          show={status}
+          onClose={() => setStatus(null)}>
+          <Toast.Body>{status}</Toast.Body>
+          <button
+            type="button"
+            class="btn-close me-2 m-auto text-light"
+            data-bs-dismiss="toast"
+            aria-label="Close"
+            onClick={() => setStatus(null)}
+          />
+        </Toast>
+      </Portal>
       <Image
         className="mb-2"
         rounded
@@ -50,13 +88,21 @@ function SignUpPage() {
           />
         </Form.Group>
 
-        <Form.Group className="mb-4" controlId="formBasicPassword">
+        <Form.Group className="mb-1" controlId="formBasicPassword">
           <Form.Label>Password</Form.Label>
           <Form.Control
             value={password}
-            type="password"
+            type={passwordIsVisible ? "text" : "password"}
             placeholder="Password"
             onChange={(e) => setPassword(e.target.value)}
+          />
+        </Form.Group>
+        <Form.Group className="mb-4" controlId="formBasicCheckbox">
+          <Form.Check
+            type="checkbox"
+            label="Show password"
+            value={passwordIsVisible}
+            onClick={togglePasswordVisibility}
           />
         </Form.Group>
 

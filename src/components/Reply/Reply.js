@@ -1,5 +1,6 @@
 import { memo } from "react";
 import constants from "../../constants";
+
 import IdeaCard from "../IdeaCard/IdeaCard";
 
 function Reply(props) {
@@ -21,7 +22,7 @@ function Connector(props) {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        width: "48px",
+        minWidth: "48px",
       }}>
       <div
         style={{
@@ -56,7 +57,7 @@ function Connector(props) {
 }
 
 function Spacer() {
-  return <div style={{ height: "16px" }}></div>;
+  return <div style={{ height: "16px" }} />;
 }
 
 export default memo(Reply);
