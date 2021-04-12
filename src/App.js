@@ -13,13 +13,11 @@ import { StoreCtx, mainReducer } from "./store";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.min.js";
-import ErrorBoundary from "./components/ErrorBoundary";
 import ErrorPage from "./pages/ErrorPage/ErrorPage";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage/SignUpPage";
 import Protected from "./components/Protected/Protected";
 import { Helmet } from "react-helmet";
-import UnverifiedPage from "./pages/UnverifiedPage";
 
 function App() {
   const [store, dispatch] = useReducer(

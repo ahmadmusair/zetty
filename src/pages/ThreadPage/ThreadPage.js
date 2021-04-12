@@ -5,10 +5,9 @@ import {
   Navbar as NativeNavbar,
   Button,
 } from "react-bootstrap";
-import { Redirect, useHistory, useParams, withRouter } from "react-router";
+import { Redirect, useHistory, useParams } from "react-router";
 
 import services from "../../services";
-import { useStore } from "../../store";
 
 import Navbar from "../../components/Navbar";
 import IdeaCard from "../../components/IdeaCard/IdeaCard";
@@ -21,7 +20,6 @@ import utils from "../../utils";
 function ThreadPage() {
   const params = useParams();
   const history = useHistory();
-  const [store, _dispatch] = useStore();
 
   const [idea, setIdea] = useState(undefined);
   useEffect(() => {

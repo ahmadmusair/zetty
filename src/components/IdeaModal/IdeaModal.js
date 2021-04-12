@@ -4,12 +4,7 @@ import { Redirect } from "react-router";
 import services from "../../services";
 
 import { useStore } from "../../store";
-import {
-  storeIdea,
-  loadingIdea,
-  updateIdea,
-  updateManyIdea,
-} from "../../store/idea.actions";
+import { storeIdea, loadingIdea, updateIdea } from "../../store/idea.actions";
 import utils from "../../utils";
 
 function IdeaModal(props) {
@@ -29,7 +24,7 @@ function IdeaModal(props) {
       setTitle("");
       setDescription("");
     }
-  }, [props.mode, props.isVisible]);
+  }, [props.mode, props.isVisible, props.idea]);
 
   function handleSubmit() {
     if (props.mode === "CREATE") {

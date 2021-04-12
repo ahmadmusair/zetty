@@ -3,14 +3,13 @@ import { Container, Row } from "react-bootstrap";
 import { Redirect } from "react-router-dom";
 import InfiniteScroll from "react-infinite-scroll-component";
 
-import Navbar from "../../components/Navbar";
-
 import services from "../../services";
+import utils from "../../utils";
 import { storeManyIdea } from "../../store/idea.actions";
 import { useStore } from "../../store";
-import utils from "../../utils";
+
+import Navbar from "../../components/Navbar";
 import IdeaCard from "../../components/IdeaCard/IdeaCard";
-import { roundToNearestMinutes } from "date-fns/esm";
 import Loading from "../../components/Loading";
 
 function HomePage() {

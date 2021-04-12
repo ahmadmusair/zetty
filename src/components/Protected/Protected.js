@@ -4,8 +4,6 @@ import { Redirect } from "react-router";
 import utils from "../../utils";
 
 import Loading from "../Loading";
-import UnverifiedPage from "../../pages/UnverifiedPage";
-import { roundToNearestMinutes } from "date-fns";
 
 function Protected(props) {
   const [isAuthenticated, setIsAuthenticated] = useState(undefined);

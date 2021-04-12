@@ -1,21 +1,17 @@
-import React, { useState, useEffect, useReducer } from "react";
+import React, { useState, useEffect } from "react";
 import { Badge, Button, Card as NCard } from "react-bootstrap";
-import { Link, Redirect, withRouter } from "react-router-dom";
+import { Link, Redirect } from "react-router-dom";
 
 import constants from "../../constants";
 import services from "../../services";
-import { useStore } from "../../store";
-import { starIdea, unstarIdea } from "../../store/idea.actions";
 import utils from "../../utils";
 
 import IdeaModal from "../IdeaModal";
 import Loading from "../Loading";
 
 function IdeaCard({ idea: initialIdea }) {
-  const [_, dispatch] = useStore();
-
   const [idea, setIdea] = useState(initialIdea);
-  const [error, setError] = useState(undefined);
+  const [isError, setIsError] = useState(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const formattedDate = getFormattedDate(idea);
 
@@ -23,7 +19,7 @@ function IdeaCard({ idea: initialIdea }) {
     setIsLoading(true);
     const unsubscribe = services.idea.getSnapshot(initialIdea.id).onSnapshot(
       (doc) => setIdea({ ...doc.data(), id: doc.id }),
-      (err) => setError(err)
+      (err) => setIsError(err)
     );
     setIsLoading(false);
     return () => unsubscribe();
@@ -38,7 +34,7 @@ function IdeaCard({ idea: initialIdea }) {
         constants.DEFAULT_DATE_FORMAT
       );
     } catch (error) {
-      setError(error);
+      setIsError(error);
     }
 
     return formattedDate;
@@ -74,18 +70,8 @@ function IdeaCard({ idea: initialIdea }) {
     setModal({ ...modal, idea: undefined, isVisible: false });
   }
 
-  function toggleStar() {
-    if (idea.isStarred) {
-      dispatch(unstarIdea(idea));
-      services.idea.unstar(idea);
-    } else {
-      dispatch(starIdea(idea));
-      services.idea.star(idea);
-    }
-  }
-
-  return error ? (
-    <Redirect to="/error" error={error} />
+  return isError ? (
+    <Redirect to="/error" error={isError} />
   ) : isLoading || !initialIdea ? (
     <Loading />
   ) : (
@@ -140,27 +126,6 @@ function EditButton(props) {
       <i className="bi bi-pen-fill btn--rounded btn--black fs-4" />
     </Button>
   );
-}
-
-function StarButton(props) {
-  return (
-    <Button onClick={props.onClick} variant="transparent" className="p-0">
-      <i
-        className={getClassName(props.isStarred)}
-        style={getColor(props.isStarred)}
-      />
-    </Button>
-  );
-}
-
-function getClassName(isStarred) {
-  return isStarred ? "bi bi-star-fill fs-4" : "bi bi-star fs-4";
-}
-
-function getColor(isStarred) {
-  return {
-    color: isStarred ? constants.PRIMARY_COLOR : constants.TEXT_COLOR,
-  };
 }
 
 const styles = {
