@@ -33,7 +33,6 @@ function ThreadPage() {
   const [replies, setReplies] = useState([]);
   useEffect(() => {
     if (!!idea) {
-      console.log("Fetching data from fireabase", idea);
       services.idea
         .fetchByRepliedID(idea.id)
         .then(utils.log)
