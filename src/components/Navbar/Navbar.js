@@ -1,14 +1,13 @@
 import { useState, memo } from "react";
 import {
   Navbar as NativeNavbar,
-  Button,
   Image,
   Dropdown,
   DropdownButton,
 } from "react-bootstrap";
-import { useLocation } from "react-router";
-import constants from "../../constants";
+
 import utils from "../../utils";
+
 import IdeaModal from "../IdeaModal";
 
 function Navbar(props) {
@@ -41,7 +40,7 @@ function Navbar(props) {
       <DropdownButton
         variant="transparent"
         style={{ display: "flex", justifyContent: "flex-end" }}
-        title={user.email}
+        title={user && user.email}
         id="dropdown-menu-align-right">
         <Dropdown.Item onClick={showModal}>Create New Idea</Dropdown.Item>
         <Dropdown.Item onClick={logOut}>Log out</Dropdown.Item>
