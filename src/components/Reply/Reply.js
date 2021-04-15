@@ -5,9 +5,15 @@ import IdeaCard from "../IdeaCard/IdeaCard";
 
 function Reply(props) {
   return (
-    <div style={{ display: "flex", flexDirection: "row", padding: "0px" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        padding: "0px",
+        width: "100%",
+      }}>
       <Connector isLast={props.isLast} />
-      <div style={{ display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
         <Spacer />
         <IdeaCard idea={props.idea} />
       </div>

@@ -5,6 +5,8 @@ import {
   Dropdown,
   DropdownButton,
 } from "react-bootstrap";
+import { useStore } from "../../store";
+import { emptyIdea } from "../../store/idea.actions";
 
 import utils from "../../utils";
 
@@ -12,6 +14,8 @@ import IdeaModal from "../IdeaModal";
 
 function Navbar(props) {
   const user = utils.firebase.auth().currentUser;
+
+  const [_, dispatch] = useStore();
 
   const [createModal, setCreateModal] = useState({
     isVisible: false,
@@ -24,6 +28,7 @@ function Navbar(props) {
 
   function logOut() {
     utils.firebase.auth().signOut();
+    dispatch(emptyIdea());
   }
 
   return (

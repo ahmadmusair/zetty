@@ -8,10 +8,10 @@ const idea = {
     const idea = {
       id: ideaRef.id,
       title: ideaDraft.title,
-      decription: ideaDraft.description,
+      description: ideaDraft.description,
       repliedID: null,
       repliesCount: 0,
-      userID: 1,
+      userID: ideaDraft.userID,
       isStarred: false,
       createdTime: timestamp,
       updatedTime: timestamp,
@@ -22,34 +22,34 @@ const idea = {
     return idea;
   },
 
-  fetch: async function ({ end, limit }) {
+  fetch: async function ({ end, limit, userID }) {
     return utils.firebase
       .firestore()
       .collection("ideas")
       .orderBy("createdTime", "desc")
+      .where("userID", "==", userID)
       .startAfter(end)
       .limit(limit)
       .get()
       .then(mapToIdeas);
   },
 
-  rawFetch: async function ({ end, limit }) {
+  rawFetch: async function ({ end, limit, userID }) {
     return utils.firebase
       .firestore()
       .collection("ideas")
+      .where("userID", "==", userID)
       .orderBy("createdTime", "desc")
       .startAfter(end)
       .limit(limit)
       .get();
   },
 
-  fetchByRepliedID: async function (id) {
+  fetchByRepliedID: function (repliedID) {
     return utils.firebase
       .firestore()
       .collection("ideas")
-      .where("repliedID", "==", id)
-      .get()
-      .then((snap) => snap.docs.map((idea) => ({ ...idea.data(), id: idea.id }))) // prettier-ignore
+      .where("repliedID", "==", repliedID);
   },
 
   fetchByID: async function (id) {

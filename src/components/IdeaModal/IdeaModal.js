@@ -14,6 +14,15 @@ function IdeaModal(props) {
   const [description, setDescription] = useState("");
   const [error, setError] = useState(undefined);
 
+  const [user, setUser] = useState(undefined);
+  useEffect(() => {
+    utils.firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        setUser(user);
+      }
+    });
+  }, []);
+
   useEffect(() => {
     if (props.mode === "UPDATE" && props.isVisible) {
       setTitle(props.idea.title);
@@ -38,12 +47,16 @@ function IdeaModal(props) {
   }
 
   async function _createIdea() {
+    if (!user) {
+      return setError("You are not logged in!");
+    }
+
     dispatch(loadingIdea(true));
 
     const ideaDraft = {
-      userID: 1,
       title,
       description,
+      userID: user.uid,
     };
 
     const newIdea = await services.idea.create(ideaDraft);
@@ -70,10 +83,14 @@ function IdeaModal(props) {
   }
 
   async function _createResponse() {
+    if (!user) {
+      return;
+    }
+
     dispatch(loadingIdea(true));
 
     const ideaDraft = {
-      userID: 1,
+      userID: user.uid,
       repliesCount: 0,
       title,
       description,

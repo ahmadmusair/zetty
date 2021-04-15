@@ -130,7 +130,7 @@ function EditButton(props) {
 
 const styles = {
   subtitle: { fontSize: "0.75rem", color: constants.TEXT_TERTIARY_COLOR },
-  card: { borderRadius: "16px", overflow: "hidden" },
+  card: { borderRadius: "16px", overflow: "hidden", width: "100%" },
   link: {
     textDecoration: "none",
     padding: "0px",

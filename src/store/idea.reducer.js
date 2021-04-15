@@ -77,6 +77,12 @@ const ideaReducer = (idea = initialState, action) => {
         ],
       };
 
+    case actionType.EMPTY:
+      return {
+        ...idea,
+        data: [],
+      };
+
     case actionType.LOADING:
       return {
         ...idea,

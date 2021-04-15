@@ -15,11 +15,13 @@ import Reply from "../../components/Reply";
 import Loading from "../../components/Loading";
 
 import "./ThreadPage.css";
-import utils from "../../utils";
 
 function ThreadPage() {
   const params = useParams();
   const history = useHistory();
+
+  const [isLoadingIdea, setIsLoadingIdea] = useState(true);
+  const [isError, setIsError] = useState(undefined);
 
   const [idea, setIdea] = useState(undefined);
   useEffect(() => {
@@ -33,16 +35,19 @@ function ThreadPage() {
   const [replies, setReplies] = useState([]);
   useEffect(() => {
     if (!!idea) {
-      services.idea
+      const unsubscribe = services.idea
         .fetchByRepliedID(idea.id)
-        .then(utils.log)
-        .then(setReplies)
-        .catch(setIsError);
+        .onSnapshot((ideasSnapshot) => {
+          const ideas = ideasSnapshot.docs.map((idea) => ({ ...idea.data(), id: idea.id })) // prettier-ignore
+          console.log("ideas", ideas);
+          setReplies(ideas);
+        }, setIsError);
+
+      return () => {
+        unsubscribe();
+      };
     }
   }, [idea]);
-
-  const [isLoadingIdea, setIsLoadingIdea] = useState(true);
-  const [isError, setIsError] = useState(undefined);
 
   if (isError) {
     return <Redirect to="/error" error={JSON.stringify(isError)} />;

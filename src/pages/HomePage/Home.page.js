@@ -16,25 +16,41 @@ function HomePage() {
   const [store, dispatch] = useStore();
   const [error, setError] = useState(undefined);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(undefined);
 
+  const [user, setUser] = useState(undefined);
   useEffect(() => {
-    if (store.idea.data.length === 0) {
-      fetchIdeas();
-    }
+    utils.firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        setUser(user);
+      }
+    });
   }, []);
 
+  useEffect(() => {
+    if (store.idea.data.length === 0 && user) {
+      fetchIdeas();
+    }
+  }, [user]);
+
   const fetchIdeas = () => {
+    console.log("fetchind ideas with userID", user.uid);
+    if (!user) {
+      return setError("You are not logged in!");
+    }
+
     setIsLoading(true);
     services.idea
       .rawFetch({
         end: utils.dateFns.getUnixTime(new Date()),
         limit: 5,
+        userID: user.uid,
       })
       .then(mapToIdeas)
       .then(saveToGlobalStore(dispatch))
-      .catch(setError)
-      .finally(() => setIsLoading(false));
+      .catch(console.log);
+
+    setIsLoading(false);
   };
 
   const fetchMore = () => {
@@ -46,6 +62,7 @@ function HomePage() {
         .rawFetch({
           end: lastIdea.createdTime,
           limit: 5,
+          userID: user.uid,
         })
         .then((snap) => {
           if (snap.empty) {
@@ -56,9 +73,10 @@ function HomePage() {
           }
         })
         .then(saveToGlobalStore(dispatch))
-        .catch(setError)
-        .finally(() => setIsLoading(false));
+        .catch(setError);
     }
+
+    setIsLoading(false);
   };
 
   return error ? (
