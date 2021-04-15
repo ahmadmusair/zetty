@@ -43,8 +43,8 @@ This repo is an implementation for Front-End Web Development With React Final Pr
 │   │   ┇
 │   │   
 │   │   
-│   ├── app.ts
-│   ├── index.ts
+│   ├── app.js
+│   ├── index.js
 │   ├── logo.svg
 │   ┇
 │ 
